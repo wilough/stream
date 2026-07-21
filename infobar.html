@@ -6,14 +6,14 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Stream Info Bar</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root{
     --bg-transparent: transparent;
-    --pill-bg:#1f1f20;      /* bar background */
+    --pill-bg:#1f1f20;
     --pill-soft:#2a2a2c;
-    --tag-bg:#f1e3e2;       /* tag background */
-    --tag-text:#722f39;     /* tag text */
+    --tag-bg:#f1e3e2;
+    --tag-text:#722f39;
     --text-main:#f6efee;
     --text-sub:#bdb5b4;
   }
@@ -25,7 +25,6 @@
     background:var(--bg-transparent);
     font-family:'Inter',sans-serif;
     color:var(--text-main);
-    /* center in available space; OBS will crop/position */
     display:flex;
     justify-content:center;
     align-items:center;
@@ -33,7 +32,6 @@
   }
 
   .wrapper{
-    /* this is the outer size OBS will see */
     min-width:420px;
     max-width:900px;
   }
@@ -75,9 +73,9 @@
   }
 
   .text-main{
-    font-family:'Playfair Display',serif;
-    font-size:17px;
-    line-height:1.2;
+    font-size:15px;
+    font-weight:600;
+    line-height:1.3;
     white-space:nowrap;
     overflow:hidden;
     text-overflow:ellipsis;
@@ -111,7 +109,6 @@
     transition:opacity .25s ease, transform .25s ease;
   }
 
-  /* Optional subtle glow when bar is hovered */
   .bar:hover{
     background:var(--pill-soft);
     box-shadow:0 2px 10px rgba(0,0,0,0.45);
@@ -134,39 +131,37 @@
 
 <script>
 // ------- CONFIGURE YOUR MESSAGES HERE -------
-// Each entry can have: tag, icon, main, sub, duration (ms)
+// Each entry: { tag, icon, main, sub, duration }
 const MESSAGES = [
   {
     tag: 'REMINDER',
     icon: '♡',
-    main: 'Cozy co-working for the soul.',
+    main: 'Cozy co‑working for the Soul.',
     sub: '50 minutes on · 10 minutes off · bring your own gentle focus.',
     duration: 12000
   },
   {
     tag: 'GOAL',
     icon: '✂️',
-    main: 'Working on 425Atelier projects live.',
-    sub: 'Soft handmade pieces for commuters & tender bodies.',
-    duration: 12000
+    main: 'Working on launching 425Atelier.',
+    sub: 'Soft handmade pieces for everyday life.',
+    duration: 14000
   },
   {
     tag: 'SCHEDULE',
     icon: '☕',
-    main: 'Morning streams most weekdays.',
-    sub: 'Usually around 6:00 am ET · follow to catch the next one.',
+    main: 'Live Monday to Friday · 8am–4pm ET.',
+    sub: 'Sometimes we stay longer if there’s more to do.',
     duration: 12000
   },
   {
     tag: 'COMMUNITY',
     icon: '✧',
     main: 'You’re welcome to just exist here.',
-    sub: 'Lurking, co-working, resting — it all counts.',
+    sub: 'Lurking, co‑working, resting — it all counts.',
     duration: 12000
   }
 ];
-
-// ------- SCRIPT (NO NEED TO EDIT BELOW UNLESS YOU WANT TO) -------
 
 const tagEl = document.getElementById('tagLabel');
 const iconEl = document.getElementById('iconSlot');
@@ -186,14 +181,12 @@ function applyMessage(msg){
 }
 
 function withFadeChange(next){
-  // simple CSS class-based fade
   mainEl.classList.remove('fade-enter','fade-enter-active','fade-exit','fade-exit-active');
   subEl.classList.remove('fade-enter','fade-enter-active','fade-exit','fade-exit-active');
 
   mainEl.classList.add('fade-exit');
   subEl.classList.add('fade-exit');
 
-  // force reflow
   void mainEl.offsetWidth;
 
   mainEl.classList.add('fade-exit-active');
@@ -220,7 +213,6 @@ function withFadeChange(next){
 
 function startRotation(){
   if(!MESSAGES.length) return;
-  // show first immediately
   applyMessage(MESSAGES[0]);
 
   function step(){
@@ -233,31 +225,30 @@ function startRotation(){
 
   function scheduleNext(delay){
     clearTimeout(timer);
-    timer = setTimeout(step, delay || (MESSAGES[index]?.duration || 10000));
+    const d = delay || (MESSAGES[index]?.duration || 10000);
+    timer = setTimeout(step, d);
   }
 
   scheduleNext(MESSAGES[0].duration || 10000);
 }
 
-// Pause rotation when hovered (helps readability)
 bar.addEventListener('mouseenter', ()=>{
   paused = true;
+  clearTimeout(timer);
 });
 bar.addEventListener('mouseleave', ()=>{
   if(!paused) return;
   paused = false;
-  // restart timing from current message
   clearTimeout(timer);
   timer = setTimeout(()=>{
     if(!paused){
       index = (index + 1) % MESSAGES.length;
       withFadeChange(MESSAGES[index]);
-      timer = setTimeout(arguments.callee, MESSAGES[index].duration || 10000);
+      startRotation();
     }
   }, 3000);
 });
 
-// Start
 startRotation();
 </script>
 </body>
