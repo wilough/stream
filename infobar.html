@@ -10,8 +10,9 @@
 <style>
   :root{
     --bg-transparent: transparent;
-    --pill-bg:#1f1f20;
-    --pill-soft:#2a2a2c;
+    /* brand background */
+    --pill-bg:#722f39;
+    --pill-soft:#5e2530;
     --tag-bg:#f1e3e2;
     --tag-text:#722f39;
     --text-main:#f6efee;
@@ -44,7 +45,7 @@
     align-items:center;
     gap:10px;
     box-shadow:0 2px 8px rgba(0,0,0,0.35);
-    border:1px solid rgba(255,255,255,0.07);
+    border:1px solid rgba(0,0,0,0.25);
   }
 
   .tag{
@@ -65,6 +66,8 @@
     align-items:baseline;
     gap:6px;
     overflow:hidden;
+    opacity:1;
+    transition:opacity .35s ease;
   }
 
   .icon{
@@ -90,25 +93,6 @@
     text-overflow:ellipsis;
   }
 
-  .fade-enter{
-    opacity:0;
-    transform:translateY(4px);
-  }
-  .fade-enter-active{
-    opacity:1;
-    transform:translateY(0);
-    transition:opacity .35s ease, transform .35s ease;
-  }
-  .fade-exit{
-    opacity:1;
-    transform:translateY(0);
-  }
-  .fade-exit-active{
-    opacity:0;
-    transform:translateY(-4px);
-    transition:opacity .25s ease, transform .25s ease;
-  }
-
   .bar:hover{
     background:var(--pill-soft);
     box-shadow:0 2px 10px rgba(0,0,0,0.45);
@@ -119,7 +103,7 @@
 <div class="wrapper">
   <div class="bar" id="infoBar">
     <div class="tag" id="tagLabel">INFO</div>
-    <div class="content">
+    <div class="content" id="contentBlock">
       <div class="icon" id="iconSlot">♡</div>
       <div>
         <div class="text-main" id="mainText">Welcome to our cozy garden stream.</div>
@@ -131,26 +115,25 @@
 
 <script>
 // ------- CONFIGURE YOUR MESSAGES HERE -------
-// Each entry: { tag, icon, main, sub, duration }
 const MESSAGES = [
   {
     tag: 'REMINDER',
     icon: '♡',
-    main: 'Cozy co‑working for the Soul.',
+    main: 'Cozy co‑working for the soul.',
     sub: '50 minutes on · 10 minutes off · bring your own gentle focus.',
     duration: 12000
   },
   {
     tag: 'GOAL',
     icon: '✂️',
-    main: 'Working on launching 425Atelier.',
+    main: 'Working on launching 425Atelier, my bag brand.',
     sub: 'Soft handmade pieces for everyday life.',
     duration: 14000
   },
   {
     tag: 'SCHEDULE',
     icon: '☕',
-    main: 'Live Monday to Friday · 8am–4pm ET.',
+    main: 'Live most weekdays · 8am–4pm ET.',
     sub: 'Sometimes we stay longer if there’s more to do.',
     duration: 12000
   },
@@ -168,6 +151,7 @@ const iconEl = document.getElementById('iconSlot');
 const mainEl = document.getElementById('mainText');
 const subEl = document.getElementById('subText');
 const bar = document.getElementById('infoBar');
+const contentBlock = document.getElementById('contentBlock');
 
 let index = 0;
 let timer = null;
@@ -180,34 +164,13 @@ function applyMessage(msg){
   subEl.textContent = msg.sub || '';
 }
 
-function withFadeChange(next){
-  mainEl.classList.remove('fade-enter','fade-enter-active','fade-exit','fade-exit-active');
-  subEl.classList.remove('fade-enter','fade-enter-active','fade-exit','fade-exit-active');
-
-  mainEl.classList.add('fade-exit');
-  subEl.classList.add('fade-exit');
-
-  void mainEl.offsetWidth;
-
-  mainEl.classList.add('fade-exit-active');
-  subEl.classList.add('fade-exit-active');
+function crossfadeTo(next){
+  // fade out whole content block
+  contentBlock.style.opacity = '0';
 
   setTimeout(()=>{
-    mainEl.classList.remove('fade-exit','fade-exit-active');
-    subEl.classList.remove('fade-exit','fade-exit-active');
-
     applyMessage(next);
-
-    mainEl.classList.add('fade-enter');
-    subEl.classList.add('fade-enter');
-    void mainEl.offsetWidth;
-    mainEl.classList.add('fade-enter-active');
-    subEl.classList.add('fade-enter-active');
-
-    setTimeout(()=>{
-      mainEl.classList.remove('fade-enter','fade-enter-active');
-      subEl.classList.remove('fade-enter','fade-enter-active');
-    }, 400);
+    contentBlock.style.opacity = '1';
   }, 220);
 }
 
@@ -216,10 +179,13 @@ function startRotation(){
   applyMessage(MESSAGES[0]);
 
   function step(){
-    if(paused) return scheduleNext();
+    if(paused){
+      scheduleNext();
+      return;
+    }
     index = (index + 1) % MESSAGES.length;
     const msg = MESSAGES[index];
-    withFadeChange(msg);
+    crossfadeTo(msg);
     scheduleNext(msg.duration || 10000);
   }
 
@@ -236,6 +202,7 @@ bar.addEventListener('mouseenter', ()=>{
   paused = true;
   clearTimeout(timer);
 });
+
 bar.addEventListener('mouseleave', ()=>{
   if(!paused) return;
   paused = false;
@@ -243,7 +210,7 @@ bar.addEventListener('mouseleave', ()=>{
   timer = setTimeout(()=>{
     if(!paused){
       index = (index + 1) % MESSAGES.length;
-      withFadeChange(MESSAGES[index]);
+      crossfadeTo(MESSAGES[index]);
       startRotation();
     }
   }, 3000);
