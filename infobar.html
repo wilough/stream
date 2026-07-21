@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<!-- infobar.html -->
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stream Info Bar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg-transparent: transparent;
+    --pill-bg:#1f1f20;      /* bar background */
+    --pill-soft:#2a2a2c;
+    --tag-bg:#f1e3e2;       /* tag background */
+    --tag-text:#722f39;     /* tag text */
+    --text-main:#f6efee;
+    --text-sub:#bdb5b4;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0;}
+
+  body{
+    margin:0;
+    background:var(--bg-transparent);
+    font-family:'Inter',sans-serif;
+    color:var(--text-main);
+    /* center in available space; OBS will crop/position */
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    padding:8px;
+  }
+
+  .wrapper{
+    /* this is the outer size OBS will see */
+    min-width:420px;
+    max-width:900px;
+  }
+
+  .bar{
+    background:var(--pill-bg);
+    border-radius:999px;
+    padding:8px 16px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    box-shadow:0 2px 8px rgba(0,0,0,0.35);
+    border:1px solid rgba(255,255,255,0.07);
+  }
+
+  .tag{
+    background:var(--tag-bg);
+    color:var(--tag-text);
+    border-radius:999px;
+    padding:4px 10px;
+    font-size:11px;
+    font-weight:600;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+    white-space:nowrap;
+  }
+
+  .content{
+    flex:1;
+    display:flex;
+    align-items:baseline;
+    gap:6px;
+    overflow:hidden;
+  }
+
+  .icon{
+    font-size:16px;
+    flex-shrink:0;
+  }
+
+  .text-main{
+    font-family:'Playfair Display',serif;
+    font-size:17px;
+    line-height:1.2;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .text-sub{
+    font-size:11px;
+    color:var(--text-sub);
+    margin-left:4px;
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+  }
+
+  .fade-enter{
+    opacity:0;
+    transform:translateY(4px);
+  }
+  .fade-enter-active{
+    opacity:1;
+    transform:translateY(0);
+    transition:opacity .35s ease, transform .35s ease;
+  }
+  .fade-exit{
+    opacity:1;
+    transform:translateY(0);
+  }
+  .fade-exit-active{
+    opacity:0;
+    transform:translateY(-4px);
+    transition:opacity .25s ease, transform .25s ease;
+  }
+
+  /* Optional subtle glow when bar is hovered */
+  .bar:hover{
+    background:var(--pill-soft);
+    box-shadow:0 2px 10px rgba(0,0,0,0.45);
+  }
+</style>
+</head>
+<body>
+<div class="wrapper">
+  <div class="bar" id="infoBar">
+    <div class="tag" id="tagLabel">INFO</div>
+    <div class="content">
+      <div class="icon" id="iconSlot">♡</div>
+      <div>
+        <div class="text-main" id="mainText">Welcome to our cozy garden stream.</div>
+        <div class="text-sub" id="subText">Lofi, gentle focus, and soft productivity.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ------- CONFIGURE YOUR MESSAGES HERE -------
+// Each entry can have: tag, icon, main, sub, duration (ms)
+const MESSAGES = [
+  {
+    tag: 'REMINDER',
+    icon: '♡',
+    main: 'Cozy co-working for the soul.',
+    sub: '50 minutes on · 10 minutes off · bring your own gentle focus.',
+    duration: 12000
+  },
+  {
+    tag: 'GOAL',
+    icon: '✂️',
+    main: 'Working on 425Atelier projects live.',
+    sub: 'Soft handmade pieces for commuters & tender bodies.',
+    duration: 12000
+  },
+  {
+    tag: 'SCHEDULE',
+    icon: '☕',
+    main: 'Morning streams most weekdays.',
+    sub: 'Usually around 6:00 am ET · follow to catch the next one.',
+    duration: 12000
+  },
+  {
+    tag: 'COMMUNITY',
+    icon: '✧',
+    main: 'You’re welcome to just exist here.',
+    sub: 'Lurking, co-working, resting — it all counts.',
+    duration: 12000
+  }
+];
+
+// ------- SCRIPT (NO NEED TO EDIT BELOW UNLESS YOU WANT TO) -------
+
+const tagEl = document.getElementById('tagLabel');
+const iconEl = document.getElementById('iconSlot');
+const mainEl = document.getElementById('mainText');
+const subEl = document.getElementById('subText');
+const bar = document.getElementById('infoBar');
+
+let index = 0;
+let timer = null;
+let paused = false;
+
+function applyMessage(msg){
+  tagEl.textContent = msg.tag || 'INFO';
+  iconEl.textContent = msg.icon || '♡';
+  mainEl.textContent = msg.main || '';
+  subEl.textContent = msg.sub || '';
+}
+
+function withFadeChange(next){
+  // simple CSS class-based fade
+  mainEl.classList.remove('fade-enter','fade-enter-active','fade-exit','fade-exit-active');
+  subEl.classList.remove('fade-enter','fade-enter-active','fade-exit','fade-exit-active');
+
+  mainEl.classList.add('fade-exit');
+  subEl.classList.add('fade-exit');
+
+  // force reflow
+  void mainEl.offsetWidth;
+
+  mainEl.classList.add('fade-exit-active');
+  subEl.classList.add('fade-exit-active');
+
+  setTimeout(()=>{
+    mainEl.classList.remove('fade-exit','fade-exit-active');
+    subEl.classList.remove('fade-exit','fade-exit-active');
+
+    applyMessage(next);
+
+    mainEl.classList.add('fade-enter');
+    subEl.classList.add('fade-enter');
+    void mainEl.offsetWidth;
+    mainEl.classList.add('fade-enter-active');
+    subEl.classList.add('fade-enter-active');
+
+    setTimeout(()=>{
+      mainEl.classList.remove('fade-enter','fade-enter-active');
+      subEl.classList.remove('fade-enter','fade-enter-active');
+    }, 400);
+  }, 220);
+}
+
+function startRotation(){
+  if(!MESSAGES.length) return;
+  // show first immediately
+  applyMessage(MESSAGES[0]);
+
+  function step(){
+    if(paused) return scheduleNext();
+    index = (index + 1) % MESSAGES.length;
+    const msg = MESSAGES[index];
+    withFadeChange(msg);
+    scheduleNext(msg.duration || 10000);
+  }
+
+  function scheduleNext(delay){
+    clearTimeout(timer);
+    timer = setTimeout(step, delay || (MESSAGES[index]?.duration || 10000));
+  }
+
+  scheduleNext(MESSAGES[0].duration || 10000);
+}
+
+// Pause rotation when hovered (helps readability)
+bar.addEventListener('mouseenter', ()=>{
+  paused = true;
+});
+bar.addEventListener('mouseleave', ()=>{
+  if(!paused) return;
+  paused = false;
+  // restart timing from current message
+  clearTimeout(timer);
+  timer = setTimeout(()=>{
+    if(!paused){
+      index = (index + 1) % MESSAGES.length;
+      withFadeChange(MESSAGES[index]);
+      timer = setTimeout(arguments.callee, MESSAGES[index].duration || 10000);
+    }
+  }, 3000);
+});
+
+// Start
+startRotation();
+</script>
+</body>
+</html>
